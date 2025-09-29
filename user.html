@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+body {
+  margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background:#f5f6fa; display:flex; flex-direction:column; min-height:100vh; color:#333;
+}
+header { background:#fff; padding:15px 30px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+header h1 { margin:0; font-size:20px; color:#111; }
+header button { background:#e84118; border:none; padding:10px; border-radius:50%; color:#fff; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:0.3s; }
+header button:hover { background:#c23616; transform:scale(1.1); }
+.container { flex:1; padding:20px; margin:20px; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); max-width:500px; margin-left:auto; margin-right:auto; }
+table { width:100%; border-collapse:collapse; border-radius:10px; overflow:hidden; }
+th, td { padding:12px; border-bottom:1px solid #eee; text-align:center; }
+th { background:#111; color:#fff; }
+tr.paid { background:#e9f7ef; }
+tr.unpaid { background:#fff3cd; }
+input[type=number] { width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-top:5px; }
+button.confirm { background:#5e60ce; border:none; color:#fff; padding:10px 15px; border-radius:6px; cursor:pointer; margin-top:10px; width:100%; }
+button.confirm:hover { background:#4c4fb8; }
+#status { margin-top:15px; font-weight:bold; font-size:16px; text-align:center; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>User Dashboard</h1>
+  <button onclick="logout()" title="Logout"><i class="fas fa-power-off"></i></button>
+</header>
+
+<div class="container">
+  <h2 id="room-name"></h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Room</th>
+        <th>Expected Rent ($)</th>
+        <th>Payment Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr id="room-row" class="unpaid">
+        <td id="room-number"></td>
+        <td id="room-rent"></td>
+        <td id="room-paid">Not Paid</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <input type="number" id="payment-amount" placeholder="Enter payment amount">
+  <button class="confirm" onclick="makePayment()">Confirm Payment</button>
+  <p id="status">No payment made yet</p>
+</div>
+
+<script>
+// Get room from query string
+const params = new URLSearchParams(window.location.search);
+const room = params.get('user') || "Room 1"; // default Room 1
+document.getElementById('room-name').innerText = `Welcome, ${room}`;
+
+// Room rents
+const rents = {
+  "Room 1": 5500,
+  "Room 2": 4500,
+  "Room 3": 4500,
+  "Room 4": 4500,
+  "Room 5": 4500,
+  "Room 6": 4000,
+  "Room 7": 14000,
+  "Room 8": 14000,
+  "Room 9": 14000,
+  "Room 10": 15000,
+  "Room 11": 10000,
+  "Room 12": 10000
+};
+
+// Set initial room data
+document.getElementById('room-number').innerText = room;
+document.getElementById('room-rent').innerText = rents[room];
+
+// Payment logic
+let paid = false;
+function makePayment() {
+  const amt = Number(document.getElementById('payment-amount').value);
+  if(isNaN(amt) || amt <= 0){
+    alert("Enter a valid amount");
+    return;
+  }
+  if(amt === rents[room]){
+    paid = true;
+    document.getElementById('room-paid').innerText = "Paid";
+    document.getElementById('room-row').className = "paid";
+    document.getElementById('status').innerText = `Payment of $${amt} successful!`;
+  } else {
+    paid = false;
+    document.getElementById('room-paid').innerText = "Mismatch";
+    document.getElementById('room-row').className = "unpaid";
+    document.getElementById('status').innerText = `Entered amount does not match rent!`;
+  }
+  document.getElementById('payment-amount').value = '';
+}
+
+function logout() {
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
