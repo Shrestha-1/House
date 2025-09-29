@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background:#f5f6fa; display:flex; height:100vh; overflow:hidden; color:#333;
+}
+.sidebar {
+  width:180px; background:#111; color:#fff; display:flex; flex-direction:column; padding-top:20px;
+}
+.sidebar h2 { text-align:center; margin-bottom:25px; font-size:18px; }
+.sidebar a { padding:12px 16px; color:#fff; text-decoration:none; display:flex; align-items:center; gap:10px; font-size:14px; transition:0.3s; }
+.sidebar a:hover, .sidebar a.active { background:#333; padding-left:20px; }
+.main { flex:1; display:flex; flex-direction:column; overflow:auto; }
+header { background:#fff; padding:15px 30px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+header h1 { margin:0; font-size:20px; color:#111; }
+header button { background:#e84118; border:none; padding:10px; border-radius:50%; color:#fff; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:0.3s; }
+header button:hover { background:#c23616; transform:scale(1.1); }
+.container { flex:1; padding:20px; margin:20px; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); overflow:auto; }
+table { width:100%; border-collapse:collapse; border-radius:10px; overflow:hidden; margin-top:15px; }
+th, td { padding:12px; border-bottom:1px solid #eee; text-align:center; }
+th { background:#111; color:#fff; }
+tr.unpaid { background:#fff3cd; }
+tr.paid { background:#e9f7ef; }
+input[type=text], input[type=number], input[type=password] { padding:5px; border:1px solid #ccc; border-radius:6px; margin:5px 0; width:calc(100% - 12px); }
+button.confirm, button.add, button.remove, button.update { 
+  background:#5e60ce; border:none; color:#fff; padding:6px 10px; border-radius:6px; cursor:pointer; margin:2px;
+}
+button.confirm:hover, button.add:hover, button.remove:hover, button.update:hover { background:#4c4fb8; }
+button.calc { margin-top:20px; background:#111; border:none; color:#fff; padding:10px 18px; border-radius:8px; font-size:14px; cursor:pointer; }
+button.calc:hover { background:#333; }
+#total { margin-top:15px; font-weight:bold; font-size:16px; text-align:right; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>🏠 Admin</h2>
+  <a href="#" class="active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+  <a href="#" data-page="residents"><i class="fas fa-users"></i> Residents</a>
+  <a href="#" data-page="payments"><i class="fas fa-dollar-sign"></i> Payments</a>
+  <a href="#" data-page="reports"><i class="fas fa-chart-line"></i> Reports</a>
+  <a href="#" data-page="settings"><i class="fas fa-cog"></i> Settings</a>
+</div>
+
+<div class="main">
+  <header>
+    <h1>Admin Panel</h1>
+    <button onclick="logout()" title="Logout"><i class="fas fa-power-off"></i></button>
+  </header>
+
+  <div class="container" id="main-container">
+    <!-- Main content will render here -->
+  </div>
+</div>
+
+<script>
+let rooms = [
+  {name:"Room 1", rent:5500, paid:false},
+  {name:"Room 2", rent:4500, paid:false},
+  {name:"Room 3", rent:4500, paid:false},
+  {name:"Room 4", rent:4500, paid:false},
+  {name:"Room 5", rent:4500, paid:false},
+  {name:"Room 6", rent:4000, paid:false},
+  {name:"Room 7", rent:14000, paid:false},
+  {name:"Room 8", rent:14000, paid:false},
+  {name:"Room 9", rent:14000, paid:false},
+  {name:"Room 10", rent:15000, paid:false},
+  {name:"Room 11", rent:10000, paid:false},
+  {name:"Room 12", rent:10000, paid:false}
+];
+
+let pieChart, barChart;
+const container = document.getElementById('main-container');
+const sidebarLinks = document.querySelectorAll('.sidebar a');
+
+sidebarLinks.forEach(link=>{
+  link.addEventListener('click', e=>{
+    e.preventDefault();
+    sidebarLinks.forEach(l=>l.classList.remove('active'));
+    link.classList.add('active');
+    const page = link.dataset.page;
+    renderPage(page);
+  });
+});
+
+function renderPage(page){
+  if(page==="dashboard") renderDashboard();
+  else if(page==="residents") renderResidents();
+  else if(page==="payments") renderPayments();
+  else if(page==="reports") renderReports();
+  else if(page==="settings") renderSettings();
+}
+
+// ===== Dashboard =====
+function renderDashboard(){
+  container.innerHTML = `<h2>Dashboard</h2>
+  <table>
+    <thead>
+      <tr><th>Room</th><th>Rent ($)</th><th>Paid</th><th>Action</th></tr>
+    </thead>
+    <tbody id="dashboard-table"></tbody>
+  </table>
+  <button class="calc" onclick="calculateTotal()">💰 Calculate Total</button>
+  <h2 id="total">Total Collected: $0</h2>`;
+
+  const tbody = document.getElementById('dashboard-table');
+  rooms.forEach(room=>{
+    const tr = document.createElement('tr');
+    tr.className = room.paid?'paid':'unpaid';
+    tr.innerHTML = `<td>${room.name}</td>
+                    <td>${room.rent}</td>
+                    <td>${room.paid?'Yes':'No'}</td>
+                    <td><button class="confirm" onclick="togglePayment('${room.name}')">Toggle</button></td>`;
+    tbody.appendChild(tr);
+  });
+  calculateTotal();
+  updateCharts();
+}
+
+function togglePayment(name){
+  let room = rooms.find(r=>r.name===name);
+  room.paid = !room.paid;
+  renderDashboard();
+}
+
+// ===== Residents =====
+function renderResidents(){
+  container.innerHTML = `<h2>Manage Residents</h2>
+    <input type="text" id="new-room-name" placeholder="Room Name">
+    <input type="number" id="new-room-rent" placeholder="Rent ($)">
+    <button class="add" onclick="addRoom()">Add Room</button>
+    <table>
+      <thead><tr><th>Room</th><th>Rent</th><th>Action</th></tr></thead>
+      <tbody id="residents-table"></tbody>
+    </table>`;
+  updateResidentsTable();
+}
+
+function addRoom(){
+  const name = document.getElementById('new-room-name').value;
+  const rent = Number(document.getElementById('new-room-rent').value);
+  if(!name || !rent){ alert("Enter valid room name and rent"); return; }
+  rooms.push({name:name,rent:rent,paid:false});
+  renderResidents();
+  updateCharts();
+}
+
+function removeRoom(index){
+  rooms.splice(index,1);
+  renderResidents();
+  updateCharts();
+}
+
+function updateResidentsTable(){
+  const tbody = document.getElementById('residents-table');
+  tbody.innerHTML = '';
+  rooms.forEach((room,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${room.name}</td><td>${room.rent}</td>
+                    <td><button class="remove" onclick="removeRoom(${i})">Remove</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ===== Payments =====
+function renderPayments(){
+  container.innerHTML = `<h2>Payments</h2>
+    <table>
+      <thead><tr><th>Room</th><th>Rent ($)</th><th>Paid</th><th>Action</th></tr></thead>
+      <tbody id="payments-table"></tbody>
+    </table>`;
+
+  const tbody = document.getElementById('payments-table');
+  rooms.forEach(room=>{
+    const tr = document.createElement('tr');
+    tr.className = room.paid?'paid':'unpaid';
+    tr.innerHTML = `<td>${room.name}</td>
+                    <td>${room.rent}</td>
+                    <td>${room.paid?'Yes':'No'}</td>
+                    <td><button class="update" onclick="togglePayment('${room.name}')">Toggle</button></td>`;
+    tbody.appendChild(tr);
+  });
+  updateCharts();
+}
+
+// ===== Reports =====
+function renderReports(){
+  container.innerHTML = `<h2>Reports</h2>
+    <p>Total Rooms: ${rooms.length}</p>
+    <p>Total Collected: $${rooms.filter(r=>r.paid).reduce((s,r)=>s+r.rent,0)}</p>
+    <p>Total Unpaid Amount: $${rooms.filter(r=>!r.paid).reduce((s,r)=>s+r.rent,0)}</p>
+    <canvas id="pieChart" style="max-width:400px; margin:20px auto;"></canvas>
+    <canvas id="barChart" style="max-width:600px; margin:20px auto;"></canvas>`;
+  updateCharts();
+}
+
+function updateCharts(){
+  const pieData = [rooms.filter(r=>r.paid).length, rooms.filter(r=>!r.paid).length];
+  const barData = rooms.map(r=>r.rent);
+  const barColors = rooms.map(r=>r.paid?'#4caf50':'#f1c40f');
+
+  // Pie Chart
+  if(pieChart) pieChart.destroy();
+  const ctxPie = document.getElementById('pieChart');
+  if(ctxPie){
+    pieChart = new Chart(ctxPie,{
+      type:'pie',
+      data:{labels:['Paid','Unpaid'], datasets:[{data:pieData, backgroundColor:['#4caf50','#f1c40f']}]},
+      options:{responsive:true}
+    });
+  }
+
+  // Bar Chart
+  if(barChart) barChart.destroy();
+  const ctxBar = document.getElementById('barChart');
+  if(ctxBar){
+    barChart = new Chart(ctxBar,{
+      type:'bar',
+      data:{labels:rooms.map(r=>r.name), datasets:[{label:'Rent ($)', data:barData, backgroundColor:barColors}]},
+      options:{responsive:true, scales:{y:{beginAtZero:true}}}
+    });
+  }
+}
+
+// ===== Settings =====
+function renderSettings(){
+  container.innerHTML = `<h2>Settings</h2>
+  <label>Admin Name: <input type="text" value="Admin"></label><br>
+  <label>Password: <input type="password" value="1234"></label><br><br>
+  <button class="update">Save Settings</button>`;
+}
+
+// ===== Utils =====
+function calculateTotal(){
+  document.getElementById('total').innerText = "Total Collected: $" + rooms.filter(r=>r.paid).reduce((sum,r)=>sum+r.rent,0);
+}
+function logout(){ window.location.href="index.html"; }
+
+// Initial render
+renderPage('dashboard');
+</script>
+</body>
+</html>
