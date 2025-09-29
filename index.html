@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>House Rent System - Login</title>
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin:0; padding:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                url('https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1950&q=80') 
+                no-repeat center center fixed;
+    background-size: cover;
+}
+.container {
+    background: rgba(255,255,255,0.95);
+    padding:30px 20px;
+    border-radius:20px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.3);
+    width:90%;
+    max-width:400px;
+    text-align:center;
+}
+.emoji { font-size:80px; text-shadow:2px 2px 5px rgba(0,0,0,0.3); margin-bottom:10px; }
+h1 { color:#8e44ad; font-size:36px; margin:5px 0; }
+input { width:90%; padding:14px; margin:10px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+button { background:#8e44ad; color:#fff; border:none; padding:18px 0; border-radius:10px; cursor:pointer; font-size:20px; width:95%; margin-top:20px; }
+button:hover { background:#732d91; }
+#error { color:red; margin-top:10px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="emoji">🏡</div>
+    <h1>LOGIN</h1>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">LOGIN</button>
+    <p id="error"></p>
+</div>
+
+<script>
+function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    // Admin login
+    if(username === "admin" && password === "admin123") {
+        window.location.href = "admin.html";
+        return;
+    }
+
+    // Room 1-12 users login
+    const rooms = Array.from({length:12},(_,i)=>"Room " + (i+1));
+    if(rooms.includes(username) && password === "123") {
+        window.location.href = "user.html?user=" + encodeURIComponent(username);
+        return;
+    }
+
+    // Invalid login
+    document.getElementById('error').innerText = "Invalid username or password!";
+}
+</script>
+
+</body>
+</html>
